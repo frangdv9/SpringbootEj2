@@ -4,10 +4,13 @@ import com.davinci.SpringbootEj2.models.DTO.UserDTO;
 import com.davinci.SpringbootEj2.models.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+@Service
 public class UsersService {
 
     private List<User> users = new ArrayList<>();
@@ -20,6 +23,19 @@ public class UsersService {
             return usuarioNuevo;
         }
         return null;
+    }
+    public User encontrarUsuario(String email){
+        if (users.isEmpty()){
+            return null;
+        }
+        Optional<User> usuarioEncontrado = users.stream().filter(usuario ->
+                usuario.getEmail().equalsIgnoreCase(email)).findFirst();
+        if(usuarioEncontrado.isPresent()){
+            return usuarioEncontrado.get();
+        }
+        else{
+            return null;
+        }
     }
     private String validateUserRegistration(String name, String email, String age, String password){
         if (name.isBlank() || email.isBlank() || age.isBlank() || password.isBlank() ){

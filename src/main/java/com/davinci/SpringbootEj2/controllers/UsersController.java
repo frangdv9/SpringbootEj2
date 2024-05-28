@@ -2,6 +2,8 @@ package com.davinci.SpringbootEj2.controllers;
 
 import com.davinci.SpringbootEj2.models.DTO.UserDTO;
 import com.davinci.SpringbootEj2.models.User;
+import com.davinci.SpringbootEj2.services.UsersService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,43 +15,38 @@ import java.util.Optional;
 @RestController()
 @RequestMapping("/users")
 public class UsersController {
-    ArrayList<User> users = new ArrayList<>();
+    @Autowired
+    private UsersService usersService;
 
 
     @GetMapping("/user/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email){
-        if (users.isEmpty()){
-            //return "No hay usuarios registrados aun";
-            return new ResponseEntity<>(new UserDTO(), HttpStatus.BAD_REQUEST);
-        }
-        Optional<User> usuarioEncontrado = users.stream().filter(usuario ->
-                usuario.getEmail().equalsIgnoreCase(email)).findFirst();
-        if(usuarioEncontrado.isPresent()){
-            return new ResponseEntity<>(new UserDTO(usuarioEncontrado.get()), HttpStatus.OK);
-        }
-        else{
-            return new ResponseEntity<>(new UserDTO(), HttpStatus.BAD_REQUEST);
+        User usuarioEncontrado = usersService.encontrarUsuario(email);
+        if (usuarioEncontrado!=null) {
+            return new ResponseEntity<>(new UserDTO(usuarioEncontrado), HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
     }
 
     @GetMapping("/user/{name}/{email}/{age}/{password}")
     public ResponseEntity<UserDTO> registerUserByPath (@PathVariable String name, @PathVariable String email, @PathVariable String age, @PathVariable String password){
-
-        return new ResponseEntity<>(new UserDTO(), HttpStatus.BAD_REQUEST);
+        User usuarioCreado = usersService.registrarUsuario(name, email, age, password);
+        if (usuarioCreado!=null) {
+            return new ResponseEntity<>(new UserDTO(usuarioCreado), HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/user")
     public ResponseEntity<UserDTO> registerUserByQuery(@RequestParam String name, @RequestParam String email, @RequestParam String age, @RequestParam String password){
-        String validationResponseMessage = validateUserRegistration(name, email, age, password);
-        if(validationResponseMessage.isBlank()){
-            User usuarioNuevo = new User(name, email, Integer.parseInt(age), password);
-            users.add(usuarioNuevo);
-            return new ResponseEntity<>(new UserDTO(usuarioNuevo), HttpStatus.OK);
-            // return "El usuario fue agregado correctamente";
+        User usuarioCreado = usersService.registrarUsuario(name, email, age, password);
+        if (usuarioCreado!=null) {
+            return new ResponseEntity<>(new UserDTO(usuarioCreado), HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
-        // return validationResponseMessage;
-        return new ResponseEntity<>(new UserDTO(), HttpStatus.BAD_REQUEST);
-
     }
     @PostMapping("/user")
     public ResponseEntity<UserDTO> registerUser(@RequestBody Map<String, Object> requestBody) {
@@ -66,16 +63,12 @@ public class UsersController {
             return new ResponseEntity<>(new UserDTO(), HttpStatus.BAD_REQUEST);
             //return "No han sido recibido los datos en su totalidad";
         }
-
-        String validationResponseMessage = validateUserRegistration(name, email, age, password);
-        if(validationResponseMessage.isBlank()){
-            User usuarioNuevo = new User(name, email, Integer.parseInt(age), password);
-            users.add(usuarioNuevo);
-            return new ResponseEntity<>(new UserDTO(usuarioNuevo), HttpStatus.OK);
-            //return "El usuario fue agregado correctamente";
+        User usuarioCreado = usersService.registrarUsuario(name, email, age, password);
+        if (usuarioCreado!=null) {
+            return new ResponseEntity<>(new UserDTO(usuarioCreado), HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(new UserDTO(), HttpStatus.BAD_REQUEST);
-        //return validationResponseMessage;
     }
 
 
